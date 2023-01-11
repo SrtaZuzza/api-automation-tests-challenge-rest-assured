@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class BookingTests {
+    public static String token = "";
     public static Faker faker;
     private static RequestSpecification request;
     private static Booking booking;
@@ -29,7 +30,7 @@ public class BookingTests {
     private static User user;
 
     @BeforeAll
-    public static void Setup(){
+    public static void setup(){
         RestAssured.baseURI = "https://restful-booker.herokuapp.com";
         faker = new Faker();
         user = new User(faker.name().username(),
@@ -43,9 +44,8 @@ public class BookingTests {
         bookingDates = new BookingDates(sdf.format(faker.date().past(1, TimeUnit.DAYS)), sdf.format(faker.date().future(1, TimeUnit.DAYS)));
         booking = new Booking(user.getFirstName(), user.getLastName(),
                 (float)faker.number().randomDouble(2, 50, 100000),
-                true,bookingDates,
-                "");
-        RestAssured.filters(new RequestLoggingFilter(),new ResponseLoggingFilter(), new ErrorLoggingFilter());
+                faker.bool().bool(), bookingDates, "");
+        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter(), new ErrorLoggingFilter());
     }
 
     @BeforeEach
@@ -57,7 +57,7 @@ public class BookingTests {
     }
 
     @Test // Create booking
-    public void  CreateBooking_WithValidData_returnOk(){
+    public void createBooking_WithValidData_returnOk(){
         request
             .contentType(ContentType.JSON)
             .when()
@@ -75,13 +75,13 @@ public class BookingTests {
     }
 
     @Test // create token
-    public void CreateAuthToken(){
+    public void createAuthToken(){
         Map<String, String> body = new HashMap<>();
         body.put("username", "admin");
         body.put("password", "password123");
 
-        request
-            .contentType(ContentType.JSON)
+        token = request
+            .header("ContentType", "application/json") //.contentType(ContentType.JSON)
             .when()
                 .body(body)
                 .post("/auth")
@@ -90,7 +90,7 @@ public class BookingTests {
                 .statusCode(200)
             .extract()
                 .path("token")
-        ; 
+        ;
     }
 
     @Test // Get Booking id list
@@ -111,15 +111,15 @@ public class BookingTests {
     public void getBookingById_returnOk(){
         request
             .when()
-                .get("/booking/" + 7771)
+                .get("/booking/" + faker.number().digits(1))
             .then()
                 .assertThat()
                 .statusCode(200)
         ;
     }
 
-    @Test
-    public void  getAllBookingsByUserFirstName_BookingExists_returnOk(){
+    @Test // Get bookings by user first name
+    public void getAllBookingsByUserFirstName_BookingExists_returnOk(){
         request
             .when()
                 .queryParam("firstName", faker.name().firstName())
@@ -133,11 +133,11 @@ public class BookingTests {
         ;
     }
 
-    @Test
-    public void  getAllBookingsByPrice_BookingExists_returnOk(){
+    @Test // Get bookings by specific price
+    public void getAllBookingsByPrice_BookingExists_returnOk(){
         request
             .when()
-                .queryParam("totalprice", 1000)
+                .queryParam("totalprice", faker.number().digits(4))
                 .get("/booking")
             .then()
                 .assertThat()
@@ -149,12 +149,11 @@ public class BookingTests {
     }
 
     @Test // Delete booking
-    public void DeleteBookingById_returnOk(){
+    public void deleteBookingById_returnOk(){
         request
-            //.header("Authorization","Basic")
-            .header("Cookie", "token=3390c953ce6c173")
+            .header("Cookie", "token=".concat(token))
             .when()
-                .delete("/booking/" + faker.number().digits(5))
+                .delete("/booking/" + faker.number().digits(2))
             .then()
                 .assertThat()
                 .statusCode(201)
@@ -162,7 +161,7 @@ public class BookingTests {
     }
 
     @Test // Health check
-    public void ApiIsUpCheck_returnCreated(){
+    public void apiIsUpCheck_returnCreated(){
         request
             .when()
                 .get("/ping")

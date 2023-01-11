@@ -1,1 +1,0 @@
-{"uuid":"671239ce-4fe0-4552-bab2-981e38a7ffdb","name":"ApiIsUpCheck_returnCreated()","children":["37a081c1-99ab-4966-9e80-554015a0914b"],"befores":[{"name":"setRequest","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1669940975510,"stop":1669940975783}],"afters":[],"start":1669940975455,"stop":1669940978140}
